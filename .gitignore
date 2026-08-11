@@ -6,6 +6,7 @@ __pycache__/
 *.pyc
 .venv/
 venv/
+backend/runtime_verify.db
 
 # Node / Next.js
 node_modules/
