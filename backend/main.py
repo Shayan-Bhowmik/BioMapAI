@@ -5,8 +5,10 @@ from sqlalchemy.orm import Session
 
 from database import get_db
 import models
+from routers import auth
 
 app = FastAPI(title="BioMap AI", version="0.1.0")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:3000"],
@@ -14,6 +16,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(auth.router)
 
 
 @app.get("/")
