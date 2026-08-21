@@ -4,8 +4,14 @@
 # Python
 __pycache__/
 *.pyc
+*.db
 .venv/
 venv/
+backend/uploads/*
+!backend/uploads/.gitkeep
+scratch/
+scratch_uploads/
+uploads/
 
 # Node / Next.js
 node_modules/

@@ -32,7 +32,7 @@ def upgrade() -> None:
     sa.Column('genus', sa.String(length=50), nullable=True),
     sa.Column('description', sa.Text(), nullable=True),
     sa.Column('image_url', sa.String(length=500), nullable=True),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_species_common_name'), 'species', ['common_name'], unique=False)
@@ -46,7 +46,7 @@ def upgrade() -> None:
     sa.Column('full_name', sa.String(length=100), nullable=True),
     sa.Column('bio', sa.Text(), nullable=True),
     sa.Column('avatar_url', sa.String(length=255), nullable=True),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
     sa.PrimaryKeyConstraint('id')
     )
@@ -64,7 +64,7 @@ def upgrade() -> None:
     sa.Column('confidence_score', sa.Float(), nullable=True),
     sa.Column('verification_status', sa.Enum('PENDING', 'VERIFIED', 'REJECTED', name='verification_status_enum'), nullable=False),
     sa.Column('notes', sa.Text(), nullable=True),
-    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.text('now()'), nullable=True),
+    sa.Column('created_at', sa.DateTime(timezone=True), server_default=sa.func.now(), nullable=True),
     sa.Column('updated_at', sa.DateTime(timezone=True), nullable=True),
     sa.Column('observer_id', sa.Integer(), nullable=False),
     sa.Column('species_id', sa.Integer(), nullable=True),

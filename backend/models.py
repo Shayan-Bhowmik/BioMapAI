@@ -6,9 +6,12 @@ import enum
 from database import Base
 
 class VerificationStatus(str, enum.Enum):
-    PENDING = "pending"
-    VERIFIED = "verified"
-    REJECTED = "rejected"
+    PENDING = "PENDING"
+    VERIFIED = "VERIFIED"
+    REJECTED = "REJECTED"
+    FLAGGED = "FLAGGED"
+    CORRECTED = "CORRECTED"
+
 
 class User(Base):
     __tablename__ = "users"
@@ -53,11 +56,14 @@ class Observation(Base):
     observed_at = Column(DateTime(timezone=True), nullable=False)
     confidence_score = Column(Float)
     verification_status = Column(
-        SAEnum(VerificationStatus, name="verification_status_enum"),
+        SAEnum(VerificationStatus, name="verification_status_enum", values_callable=lambda x: [e.value for e in x]),
         default=VerificationStatus.PENDING,
         nullable=False
     )
     notes = Column(Text)
+    flagged_reason = Column(Text, nullable=True)
+    suggested_species_common = Column(String(200), nullable=True)
+    suggested_species_scientific = Column(String(200), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     observer_id = Column(Integer, ForeignKey("users.id"), nullable=False)

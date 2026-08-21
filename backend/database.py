@@ -10,7 +10,8 @@ DATABASE_URL=os.getenv(
     "postgresql://postgres:postgres@localhost:5432/biomap"
 )
 
-engine = create_engine(DATABASE_URL)
+connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+engine = create_engine(DATABASE_URL, connect_args=connect_args)
 
 SessionLocal=sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base=declarative_base()
