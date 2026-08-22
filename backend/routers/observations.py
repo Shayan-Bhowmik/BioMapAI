@@ -106,6 +106,15 @@ def create_observation(
     db.refresh(obs)
     return obs
 
+@router.get("", response_model=list[schemas.ObservationResponse])
+def list_observation(
+    db: Session=Depends(get_db),
+):
+    observations=(
+        db.query(models.Observation).order_by(models.Observation.created_at.desc()).all()
+    )
+
+    return observations
 
 @router.get("/{id}", response_model=schemas.ObservationResponse)
 def get_observation(
