@@ -47,7 +47,7 @@ export default function UploadPage() {
   // Metadata & Location state
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [observedAt, setObservedAt] = useState<string>(
-    new Date().toISOString().slice(0, 16)
+    new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 16)
   );
   const [notes, setNotes] = useState<string>("");
   const [saving, setSaving] = useState<boolean>(false);
