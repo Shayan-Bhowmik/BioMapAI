@@ -4,6 +4,9 @@ from fastapi import APIRouter, Depends, File, HTTPException, UploadFile, status
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import IntegrityError
 
+from typing import Optional
+from sqlalchemy import or_
+
 from database import get_db
 from auth import get_current_user
 import models
@@ -108,13 +111,43 @@ def create_observation(
 
 @router.get("", response_model=list[schemas.ObservationResponse])
 def list_observation(
-    db: Session=Depends(get_db),
+    species: Optional[str] = None,
+    observer: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+    db: Session = Depends(get_db),
 ):
-    observations=(
-        db.query(models.Observation).order_by(models.Observation.created_at.desc()).all()
-    )
+    query = db.query(models.Observation)
 
+    if species:
+        search = f"%{species}%"
+        query = query.filter(or_(
+            models.Observation.species_common.ilike(search),
+            models.Observation.species_scientific.ilike(search)
+        ))
+
+    if observer:
+        query = query.join(models.User, models.Observation.observer_id == models.User.id).filter(
+            models.User.username.ilike(f"%{observer}%")
+        )
+
+    if start_date:
+        try:
+            dt = datetime.fromisoformat(start_date.replace('Z', '+00:00'))
+            query = query.filter(models.Observation.observed_at >= dt)
+        except ValueError:
+            pass
+
+    if end_date:
+        try:
+            dt = datetime.fromisoformat(end_date.replace('Z', '+00:00'))
+            query = query.filter(models.Observation.observed_at <= dt)
+        except ValueError:
+            pass
+
+    observations = query.order_by(models.Observation.created_at.desc()).all()
     return observations
+
 
 @router.get("/{id}", response_model=schemas.ObservationResponse)
 def get_observation(
