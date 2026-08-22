@@ -7,10 +7,12 @@ import { useAuth } from "@/context/AuthContext";
 const navLinks = [
   { href: "/", label: "Home" },
   { href: "/map", label: "Map" },
+  { href: "/gallery", label: "Gallery" },
   { href: "/upload", label: "Upload" },
   { href: "/dashboard", label: "Dashboard" },
   { href: "/profile", label: "Profile" },
 ];
+
 
 export default function Navbar() {
   const pathname = usePathname();
