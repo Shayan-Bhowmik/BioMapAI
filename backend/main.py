@@ -5,6 +5,8 @@ from fastapi.staticfiles import StaticFiles
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 
+from routers import auth, observations, analytics
+
 from database import get_db
 import models
 from routers import auth, observations
@@ -26,6 +28,7 @@ app.mount("/uploads", StaticFiles(directory=UPLOAD_DIR), name="uploads")
 
 app.include_router(auth.router)
 app.include_router(observations.router)
+app.include_router(analytics.router)
 
 
 @app.get("/")
@@ -39,4 +42,4 @@ def health(db: Session = Depends(get_db)):
         db.execute(text("SELECT 1"))
         return {"status": "ok", "database": "connected"}
     except Exception as e:
-        return {"status": "error", "database": str(e)}
+        return {"status": "error", "database": str(e)}
