@@ -115,6 +115,7 @@ def list_observation(
     observer: Optional[str] = None,
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
+    sort_by: Optional[str] = None,
     db: Session = Depends(get_db),
 ):
     query = db.query(models.Observation)
@@ -145,7 +146,16 @@ def list_observation(
         except ValueError:
             pass
 
-    observations = query.order_by(models.Observation.created_at.desc()).all()
+    if sort_by == "species_asc":
+        query = query.order_by(models.Observation.species_common.asc())
+    elif sort_by == "species_desc":
+        query = query.order_by(models.Observation.species_common.desc())
+    elif sort_by == "date_asc":
+        query = query.order_by(models.Observation.observed_at.asc())
+    else:
+        query = query.order_by(models.Observation.observed_at.desc())
+
+    observations = query.all()
     return observations
 
 
