@@ -23,7 +23,7 @@ interface AnalyticsSummary {
   species_richness: number;
 }
 
-interface TopSpecies {
+interface SpeciesCount {
   species_common: string | null;
   species_scientific: string;
   count: number;
@@ -35,7 +35,8 @@ export default function DashboardPage() {
   const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
   const [trends, setTrends] = useState<SeasonalTrend[]>([]);
   const [hotspots, setHotspots] = useState<HotspotDensity[]>([]);
-  const [topSpecies, setTopSpecies] = useState<TopSpecies[]>([]);
+  const [topSpecies, setTopSpecies] = useState<SpeciesCount[]>([]);
+  const [rareSpecies, setRareSpecies] = useState<SpeciesCount[]>([]);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -45,29 +46,34 @@ export default function DashboardPage() {
     setError(null);
 
     try {
-      const [summaryRes, trendsRes, densityRes, topSpeciesRes] = await Promise.all([
+      const [summaryRes, trendsRes, densityRes, topSpeciesRes, rareSpeciesRes] = await Promise.all([
         fetch(`${API_BASE}/analytics/summary`),
         fetch(`${API_BASE}/analytics/seasonal-trends`),
         fetch(`${API_BASE}/analytics/density`),
         fetch(`${API_BASE}/analytics/top-species?limit=5`),
+        fetch(`${API_BASE}/analytics/rare-species?threshold=3&limit=10`),
       ]);
 
       if (!summaryRes.ok) throw new Error("Failed to fetch analytics summary");
       if (!trendsRes.ok) throw new Error("Failed to fetch seasonal trends");
       if (!densityRes.ok) throw new Error("Failed to fetch density hotspots");
       if (!topSpeciesRes.ok) throw new Error("Failed to fetch top species");
+      if (!rareSpeciesRes.ok) throw new Error("Failed to fetch rare species");
 
-      const [summaryData, trendsData, densityData, topSpeciesData] = await Promise.all([
-        summaryRes.json(),
-        trendsRes.json(),
-        densityRes.json(),
-        topSpeciesRes.json(),
-      ]);
+      const [summaryData, trendsData, densityData, topSpeciesData, rareSpeciesData] =
+        await Promise.all([
+          summaryRes.json(),
+          trendsRes.json(),
+          densityRes.json(),
+          topSpeciesRes.json(),
+          rareSpeciesRes.json(),
+        ]);
 
       setSummary(summaryData);
       setTrends(trendsData);
       setHotspots(densityData);
       setTopSpecies(topSpeciesData);
+      setRareSpecies(rareSpeciesData);
     } catch (err: unknown) {
       console.error("Error loading analytics data:", err);
       setError(
@@ -85,30 +91,35 @@ export default function DashboardPage() {
 
     async function loadInitialData() {
       try {
-        const [summaryRes, trendsRes, densityRes, topSpeciesRes] = await Promise.all([
+        const [summaryRes, trendsRes, densityRes, topSpeciesRes, rareSpeciesRes] = await Promise.all([
           fetch(`${API_BASE}/analytics/summary`),
           fetch(`${API_BASE}/analytics/seasonal-trends`),
           fetch(`${API_BASE}/analytics/density`),
           fetch(`${API_BASE}/analytics/top-species?limit=5`),
+          fetch(`${API_BASE}/analytics/rare-species?threshold=3&limit=10`),
         ]);
 
         if (!summaryRes.ok) throw new Error("Failed to fetch analytics summary");
         if (!trendsRes.ok) throw new Error("Failed to fetch seasonal trends");
         if (!densityRes.ok) throw new Error("Failed to fetch density hotspots");
         if (!topSpeciesRes.ok) throw new Error("Failed to fetch top species");
+        if (!rareSpeciesRes.ok) throw new Error("Failed to fetch rare species");
 
-        const [summaryData, trendsData, densityData, topSpeciesData] = await Promise.all([
-          summaryRes.json(),
-          trendsRes.json(),
-          densityRes.json(),
-          topSpeciesRes.json(),
-        ]);
+        const [summaryData, trendsData, densityData, topSpeciesData, rareSpeciesData] =
+          await Promise.all([
+            summaryRes.json(),
+            trendsRes.json(),
+            densityRes.json(),
+            topSpeciesRes.json(),
+            rareSpeciesRes.json(),
+          ]);
 
         if (isSubscribed) {
           setSummary(summaryData);
           setTrends(trendsData);
           setHotspots(densityData);
           setTopSpecies(topSpeciesData);
+          setRareSpecies(rareSpeciesData);
           setError(null);
         }
       } catch (err: unknown) {
@@ -278,46 +289,44 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Middle Section: Trends & Top Species */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Biodiversity Trends Over Time Chart (2 cols) */}
-          <div className="lg:col-span-2 bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-md flex flex-col justify-between">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <h2 className="text-lg font-bold text-gray-100 flex items-center gap-2">
-                  <span>📈</span> Biodiversity Trends Over Time
-                </h2>
-                <span className="text-xs bg-emerald-950 text-emerald-400 border border-emerald-900 px-2.5 py-0.5 rounded-full font-medium">
-                  Seasonal Distribution
-                </span>
-              </div>
-            </div>
-
-            <div className="mt-4">
-              {loading ? (
-                <div className="h-64 bg-gray-950/60 rounded-xl border border-gray-800 flex items-center justify-center">
-                  <div className="w-8 h-8 border-3 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin"></div>
-                </div>
-              ) : (
-                <TrendChart trends={trends} />
-              )}
-            </div>
+        {/* Biodiversity Trends Over Time Chart */}
+        <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-md">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-lg font-bold text-gray-100 flex items-center gap-2">
+              <span>📈</span> Biodiversity Trends Over Time
+            </h2>
+            <span className="text-xs bg-emerald-950 text-emerald-400 border border-emerald-900 px-2.5 py-0.5 rounded-full font-medium">
+              Seasonal Distribution
+            </span>
           </div>
 
-          {/* Top Observed Species (1 col) */}
+          <div className="mt-4">
+            {loading ? (
+              <div className="h-64 bg-gray-950/60 rounded-xl border border-gray-800 flex items-center justify-center">
+                <div className="w-8 h-8 border-3 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin"></div>
+              </div>
+            ) : (
+              <TrendChart trends={trends} />
+            )}
+          </div>
+        </div>
+
+        {/* Species Distribution: Top Observed Species & Rare / Uncommon Species */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Top Observed Species */}
           <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-md flex flex-col">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold text-gray-100 flex items-center gap-2">
                 <span>🏆</span> Top Observed Species
               </h2>
-              <span className="text-xs text-gray-400">Ranked by count</span>
+              <span className="text-xs text-gray-400">Most frequent</span>
             </div>
 
             <div className="flex-1 flex flex-col justify-center">
               {loading ? (
                 <div className="space-y-3">
-                  {[1, 2, 3, 4].map((i) => (
-                    <div key={i} className="h-12 bg-gray-950/60 border border-gray-800 rounded-lg animate-pulse"></div>
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="h-14 bg-gray-950/60 border border-gray-800 rounded-lg animate-pulse"></div>
                   ))}
                 </div>
               ) : topSpecies.length === 0 ? (
@@ -352,7 +361,7 @@ export default function DashboardPage() {
                             </div>
                           </div>
                           <span className="text-xs font-bold bg-emerald-950 text-emerald-400 border border-emerald-900 px-2 py-0.5 rounded whitespace-nowrap">
-                            {sp.count} obs
+                            {sp.count} observation{sp.count !== 1 ? "s" : ""}
                           </span>
                         </div>
 
@@ -366,6 +375,69 @@ export default function DashboardPage() {
                       </div>
                     );
                   })}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Rare / Uncommon Species Widget (Ticket 17) */}
+          <div className="bg-gray-900 border border-gray-800 rounded-xl p-5 shadow-md flex flex-col">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-gray-100 flex items-center gap-2">
+                <span>✨</span> Rare & Uncommon Species
+              </h2>
+              <span className="text-xs bg-amber-950 text-amber-400 border border-amber-900 px-2.5 py-0.5 rounded-full font-medium">
+                Threshold: ≤ 3 sightings
+              </span>
+            </div>
+
+            <div className="flex-1 flex flex-col justify-center">
+              {loading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="h-14 bg-gray-950/60 border border-gray-800 rounded-lg animate-pulse"></div>
+                  ))}
+                </div>
+              ) : rareSpecies.length === 0 ? (
+                <div className="text-center py-10 text-gray-400">
+                  <span className="text-3xl block mb-2">🔍</span>
+                  <p className="text-sm font-medium text-gray-300">
+                    No rare or uncommon species detected yet.
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    Species with 3 or fewer total records will appear here as biodiversity data is gathered.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2.5">
+                  {rareSpecies.map((sp, idx) => (
+                    <div
+                      key={`rare-species-${sp.species_scientific}-${idx}`}
+                      className="p-3 bg-gray-950/60 border border-amber-900/40 rounded-lg hover:border-amber-700/60 transition-colors"
+                    >
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-center gap-2.5 min-w-0">
+                          <span className="text-sm">🌿</span>
+                          <div className="truncate">
+                            <p className="text-sm font-semibold text-gray-200 truncate">
+                              {sp.species_common || "Unidentified Common Name"}
+                            </p>
+                            <p className="text-xs text-amber-200/70 italic truncate">
+                              {sp.species_scientific}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex flex-col items-end gap-1 flex-shrink-0">
+                          <span className="text-xs font-bold bg-amber-950 text-amber-400 border border-amber-800/80 px-2 py-0.5 rounded whitespace-nowrap">
+                            {sp.count} sighting{sp.count !== 1 ? "s" : ""}
+                          </span>
+                          <span className="text-[10px] text-gray-400 uppercase font-mono tracking-wider">
+                            Rare occurrence
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>

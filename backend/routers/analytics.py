@@ -94,3 +94,27 @@ def get_observation_density(db: Session = Depends(get_db)):
             "count": r.count
         } for r in results
     ]
+
+@router.get("/rare-species")
+def get_rare_species(threshold: int = 3, limit: int = 10, db: Session = Depends(get_db)):
+    # Identify species with observation count <= threshold (deterministic frequency threshold)
+    results = db.query(
+        models.Observation.species_common,
+        models.Observation.species_scientific,
+        func.count(models.Observation.id).label("count")
+    )\
+    .filter(models.Observation.species_scientific.isnot(None))\
+    .group_by(models.Observation.species_common, models.Observation.species_scientific)\
+    .having(func.count(models.Observation.id) <= threshold)\
+    .order_by(func.count(models.Observation.id).asc())\
+    .limit(limit)\
+    .all()
+
+    return [
+        {
+            "species_common": r.species_common,
+            "species_scientific": r.species_scientific,
+            "count": r.count
+        } for r in results
+    ]
+
