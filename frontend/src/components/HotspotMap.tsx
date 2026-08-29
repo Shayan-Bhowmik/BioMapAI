@@ -1,9 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { MapContainer, TileLayer, CircleMarker, Popup, Tooltip } from "react-leaflet";
+import { MapContainer, TileLayer, CircleMarker, Popup, Tooltip, useMap } from "react-leaflet";
 
 // Fix Leaflet's default icon paths in Next.js client-side execution
 delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl;
@@ -21,6 +21,15 @@ export interface HotspotDensity {
 
 interface HotspotMapProps {
   hotspots: HotspotDensity[];
+}
+
+// Helper component to handle center changes dynamically
+function MapRecenter({ center }: { center: [number, number] }) {
+  const map = useMap();
+  useEffect(() => {
+    map.flyTo(center, map.getZoom());
+  }, [center, map]);
+  return null;
 }
 
 export default function HotspotMap({ hotspots }: HotspotMapProps) {
@@ -83,6 +92,7 @@ export default function HotspotMap({ hotspots }: HotspotMapProps) {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+        <MapRecenter center={center} />
 
         {hotspots.map((spot, idx) => {
           const style = getMarkerStyle(spot.count);

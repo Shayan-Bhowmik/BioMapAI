@@ -74,16 +74,15 @@ def get_seasonal_trends(db: Session = Depends(get_db)):
 
 @router.get("/density")
 def get_observation_density(db: Session = Depends(get_db)):
-    # Group by rough region by rounding lat/lng to 1 decimal place (~11km grid)
-    # Using cast to Integer after multiplying by 10 is cross-db safe
+    # Group by a finer region by rounding lat/lng to 2 decimal places (~1.1km grid)
     results = db.query(
-        (cast(models.Observation.lat * 10, Integer) / 10.0).label("grid_lat"),
-        (cast(models.Observation.lng * 10, Integer) / 10.0).label("grid_lng"),
+        (cast(models.Observation.lat * 100, Integer) / 100.0).label("grid_lat"),
+        (cast(models.Observation.lng * 100, Integer) / 100.0).label("grid_lng"),
         func.count(models.Observation.id).label("count")
     )\
     .group_by(
-        cast(models.Observation.lat * 10, Integer) / 10.0,
-        cast(models.Observation.lng * 10, Integer) / 10.0
+        cast(models.Observation.lat * 100, Integer) / 100.0,
+        cast(models.Observation.lng * 100, Integer) / 100.0
     )\
     .all()
 
@@ -94,6 +93,7 @@ def get_observation_density(db: Session = Depends(get_db)):
             "count": r.count
         } for r in results
     ]
+
 
 @router.get("/rare-species")
 def get_rare_species(threshold: int = 3, limit: int = 10, db: Session = Depends(get_db)):

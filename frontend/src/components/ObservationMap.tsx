@@ -1,9 +1,9 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 
 delete (L.Icon.Default.prototype as any)._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -34,6 +34,15 @@ interface ObservationMapProps {
   observations: Observation[];
 }
 
+// Helper component to handle center changes dynamically
+function MapRecenter({ center }: { center: [number, number] }) {
+  const map = useMap();
+  useEffect(() => {
+    map.flyTo(center, map.getZoom());
+  }, [center, map]);
+  return null;
+}
+
 export default function ObservationMap({ observations }: ObservationMapProps) {
   const defaultCenter: [number, number] = [28.6139, 77.209];
   const center: [number, number] =
@@ -53,6 +62,8 @@ export default function ObservationMap({ observations }: ObservationMapProps) {
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
+        <MapRecenter center={center} />
+
         {observations.map((obs) => (
           <Marker key={obs.id} position={[obs.lat, obs.lng]}>
             <Popup maxWidth={280} minWidth={240}>
